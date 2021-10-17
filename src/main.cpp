@@ -35,8 +35,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 uint8_t pots[NUM_POTS] = { POT_PIN_1, POT_PIN_2, POT_PIN_3 };
 uint16_t mapedValues[3];
-bool act = false;
-bool serialRGBDebug = false; // Set this to true if you want serial RGB output
+bool serialRGBDebug = true; // Set this to true if you want serial RGB output
 
 
 void clear()
@@ -50,63 +49,18 @@ void clear()
   lcd.clear();
 }
 
-uint8_t checkForUint(int test)
+uint8_t checkForUint(int value)
 {
-  if (test > 255)
+  if (value > 255)
   {
-    test = 255;
+    value = 255;
   }
-  else if (test < 0)
+  else if (value < 0)
   {
-    test = 0;
+    value = 0;
   }
-  return test;
-}
 
-void compareValues()
-{
-  for (uint8_t i = 0; i < 3; i++)
-  {
-    uint16_t help = map(analogRead(pots[i]), 950, 20, 0, 255);
-    help = checkForUint(help);
-    if (help < (mapedValues[i] - 2) || help > (mapedValues[i] + 2))
-    {
-      act = true;
-      mapedValues[i] = help;
-    }
-  }
-}
-
-void displayValues()
-{
-  for (uint8_t i = 0; i < 3; i++)
-  {
-    switch (i)
-    {
-      case 0:
-        lcd.setCursor(0, 1);
-        lcd.print("   ");
-        lcd.setCursor(0, 1);
-        break;
-
-      case 1:
-        lcd.setCursor(7, 1);
-        lcd.print("   ");
-        lcd.setCursor(7, 1);
-        break;
-
-      case 2:
-        lcd.setCursor(13, 1);
-        lcd.print("   ");
-        lcd.setCursor(13, 1);
-        break;
-    
-      default:
-        break;
-    }
-
-    lcd.print(mapedValues[i]);
-  }
+  return value;
 }
 
 void printRGBSerial()
@@ -137,9 +91,10 @@ void setup()
 
   lcd.backlight();
 
+  lcd.setCursor(3, 0);
   lcd.print("Welcome to");
   lcd.setCursor(0, 1);
-  lcd.print("LED-Mixer V0.2.2");
+  lcd.print("Color-Mixer v2.6");
 
   delay(3000);
 
@@ -154,28 +109,57 @@ void setup()
 
 void loop()
 {
-  act = false;
-  compareValues();
-
-  if (act)
+  for (uint8_t i = 0; i < 3; i++)
   {
-    leds[0].setRGB(0, 0, mapedValues[2]);   // Blue
-    leds[1].setRGB(0, mapedValues[1], 0);   // Green
-    leds[2].setRGB(mapedValues[0], 0, 0);   // Red
-    displayValues();
-    
-    for (uint8_t i = NUM_RGB_LEDS; i < NUM_LEDS; i++)
+    uint16_t values = map(analogRead(pots[i]), 950, 20, 0, 255);
+    values = checkForUint(values);
+
+    if (values < (mapedValues[i] - 2) || values > (mapedValues[i] + 2))
     {
-      leds[i].setRGB(mapedValues[0], mapedValues[1], mapedValues[2]);
-    }
+      mapedValues[i] = values;
 
-    FastLED.show();
-  }
-  
-  if (serialRGBDebug == true)
-  {
-    printRGBSerial();
-  }
+      switch (i)
+      {
+        case 0:
+          lcd.setCursor(0, 1);
+          lcd.print("   ");
+          lcd.setCursor(0, 1);
+          break;
 
-  delay(1);  // Delay for stability
+        case 1:
+          lcd.setCursor(7, 1);
+          lcd.print("   ");
+          lcd.setCursor(7, 1);
+          break;
+
+        case 2:
+          lcd.setCursor(13, 1);
+          lcd.print("   ");
+          lcd.setCursor(13, 1);
+          break;
+    
+        default:
+          break;
+      }
+
+      lcd.print(mapedValues[i]);
+
+      leds[0].setRGB(0, 0, mapedValues[2]);   // Blue
+      leds[1].setRGB(0, mapedValues[1], 0);   // Green
+      leds[2].setRGB(mapedValues[0], 0, 0);   // Red
+
+
+      if (serialRGBDebug == true)
+      {
+        printRGBSerial();
+      } 
+    
+      for (uint8_t i = NUM_RGB_LEDS; i < NUM_LEDS; i++)
+      {
+        leds[i].setRGB(mapedValues[0], mapedValues[1], mapedValues[2]);
+      }
+
+      FastLED.show();
+    } 
+  }
 }
