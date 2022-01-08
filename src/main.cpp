@@ -1,6 +1,6 @@
 /**
  * Color-Mixer  -  A project to mix colors on a LED strip with the arduino.
- * Copyright (C) 2021  Mastaschief, Rivallix
+ * Copyright (C) 2021-2022  Mastaschief, Rivallix
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
